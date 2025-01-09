@@ -1,0 +1,60 @@
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.1.1
+  python: circleci/python@2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - checkout
+      
+      - python/install-packages:
+          pkg-manager: pip
+          packages:
+            - flask==3.0.0
+            - werkzeug==3.0.0
+            - pytest
+            - requests
+      
+      - run:
+          name: Run tests
+          command: |
+            python -m pytest tests/ -v
+            
+  build-and-push:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - checkout
+      - setup_remote_docker
+      - docker/build:
+          image: flask-microservice
+          tag: latest
+      - docker/push:
+          image: flask-microservice
+          tag: latest
+      - docker/push:
+          image: flask-microservice
+          tag: $CIRCLE_SHA1
+
+workflows:
+  version: 2
+  ci-cd-workflow:
+    jobs:
+      - test:
+          filters:
+            branches:
+              only:
+                - main
+                - /pull\/[0-9]+/
+      - build-and-push:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - main
+                - /pull\/[0-9]+/
