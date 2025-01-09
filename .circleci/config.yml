@@ -1,8 +1,8 @@
 version: 2.1
 
-orbs:
-  docker: circleci/docker@2.1.1
-  python: circleci/python@2.1
+# orbs:
+#   docker: circleci/docker@2.1.1
+#   python: circleci/python@2.1
 
 jobs:
   test:
@@ -12,7 +12,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          requirements-file: requirements.txt
+          requirements-file: ./requirements.txt
       # - run:
       #     command: python -m pytest tests/ -v
       #     name: Run tests
@@ -56,12 +56,12 @@ workflows:
   # Workflow for pull requests and feature branches
   test-workflow:
     jobs:
-      - test:
-          filters:
-            branches:
-              ignore: 
-                - main
-                - master
+      - test
+          # filters:
+          #   branches:
+          #     ignore: 
+          #       - main
+          #       - master
 
   # Workflow for main branch
   # main-workflow:
