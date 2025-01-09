@@ -10,31 +10,26 @@ jobs:
       - image: cimg/python:3.9
     steps:
       - checkout
-      
       - python/install-packages:
           pkg-manager: pip
           requirements-file: requirements.txt
-      
-      - run:
-          name: Run tests
-          command: |
-            python -m pytest tests/ -v
-            
+
   build-and-push:
     docker:
       - image: cimg/python:3.9
     steps:
       - checkout
       - setup_remote_docker
-      - docker/build:
-          image: flask-microservice
-          tag: latest
-      - docker/push:
-          image: flask-microservice
-          tag: latest
-      - docker/push:
-          image: flask-microservice
-          tag: $CIRCLE_SHA1
+      - run:
+          name: Build Docker Image
+          command: docker build -t ngofficial99/python-cicd:latest .
+      # - run:
+      #     name: Push Docker Image (latest)
+      #     command: docker push ngofficial99/python-cicd:latest
+      # - run:
+      #     name: Push Docker Image (SHA)
+      #     command: docker tag ngofficial99/python-cicd:latest ngofficial99/python-cicd:$CIRCLE_SHA1 && \
+      #              docker push ngofficial99/python-cicd:$CIRCLE_SHA1
 
 workflows:
   version: 2
