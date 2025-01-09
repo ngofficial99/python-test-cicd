@@ -13,11 +13,7 @@ jobs:
       
       - python/install-packages:
           pkg-manager: pip
-          packages:
-            - flask==3.0.0
-            - werkzeug==3.0.0
-            - pytest
-            - requests
+          requirements-file: requirements.txt
       
       - run:
           name: Run tests
