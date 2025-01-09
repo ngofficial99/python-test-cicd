@@ -13,42 +13,75 @@ jobs:
       - python/install-packages:
           pkg-manager: pip
           requirements-file: requirements.txt
+      # - run:
+      #     command: python -m pytest tests/ -v
+      #     name: Run tests
 
-  build-and-push:
+  build:
     docker:
       - image: cimg/python:3.9
     steps:
       - checkout
       - setup_remote_docker
       - run:
-          name: Log in to Docker Hub
-          command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-      - run:
           name: Build Docker Image
           command: docker build -t ngofficial99/python-cicd:latest .
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - .
+
+  push:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - setup_remote_docker
+      - run:
+          name: Log in to Docker Hub
+          command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - run:
           name: Push Docker Image (latest)
           command: docker push ngofficial99/python-cicd:latest
       - run:
           name: Push Docker Image (SHA)
-          command: docker tag ngofficial99/python-cicd:latest ngofficial99/python-cicd:$CIRCLE_SHA1 && \
-                   docker push ngofficial99/python-cicd:$CIRCLE_SHA1
+          command: |
+            docker tag ngofficial99/python-cicd:latest ngofficial99/python-cicd:$CIRCLE_SHA1
+            docker push ngofficial99/python-cicd:$CIRCLE_SHA1
 
 workflows:
   version: 2
-  ci-cd-workflow:
+  
+  # Workflow for pull requests and feature branches
+  test-workflow:
     jobs:
       - test:
           filters:
             branches:
-              only:
+              ignore: 
                 - main
-                
-      - build-and-push:
+                - master
+
+  # Workflow for main branch
+  main-workflow:
+    jobs:
+      - test:
+          filters:
+            branches:
+              only: 
+                - main
+      - build:
           requires:
             - test
           filters:
             branches:
-              only:
+              only: 
                 - main
-                
+      - push:
+          requires:
+            - build
+          filters:
+            branches:
+              only: 
+                - main
